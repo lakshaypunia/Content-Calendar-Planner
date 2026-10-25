@@ -1,26 +1,200 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Design tokens. Warm paper canvas, ink sidebar, one electric accent and a
+ * colour per content pillar. Everything else derives from these.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --canvas: #f6f3ee;
+  --surface: #ffffff;
+  --surface-2: #fbfaf7;
+  --ink: #17151c;
+  --ink-2: #4a4655;
+  --ink-3: #8a8594;
+  --line: #e8e3da;
+  --line-strong: #d9d2c5;
+
+  --accent: #5b3df5;
+  --accent-ink: #ffffff;
+  --accent-soft: #ece8ff;
+  --coral: #ff6b4a;
+
+  --danger: #d93a3a;
+  --danger-soft: #fdecec;
+  --success: #1f9d6b;
+
+  --pillar-educational: #2f6bff;
+  --pillar-educational-soft: #e7eeff;
+  --pillar-bts: #d9822b;
+  --pillar-bts-soft: #fdf0e1;
+  --pillar-proof: #1f9d6b;
+  --pillar-proof-soft: #e3f5ec;
+  --pillar-promo: #e5484d;
+  --pillar-promo-soft: #fde8e8;
+  --pillar-fun: #a845e8;
+  --pillar-fun-soft: #f4e8fd;
+
+  --shadow-sm: 0 1px 2px rgb(23 21 28 / 0.05);
+  --shadow-md: 0 1px 2px rgb(23 21 28 / 0.04), 0 6px 20px -6px rgb(23 21 28 / 0.1);
+  --shadow-lg: 0 2px 4px rgb(23 21 28 / 0.04), 0 24px 48px -12px rgb(23 21 28 / 0.18);
+}
+
+.dark {
+  --canvas: #0f0e13;
+  --surface: #17161d;
+  --surface-2: #1c1b23;
+  --ink: #f2f0f7;
+  --ink-2: #b9b5c4;
+  --ink-3: #7c7889;
+  --line: #2a2833;
+  --line-strong: #383542;
+
+  --accent: #7c63ff;
+  --accent-soft: #261f4d;
+
+  --danger-soft: #3a1717;
+
+  --pillar-educational: #6b95ff;
+  --pillar-educational-soft: #18234a;
+  --pillar-bts: #f0a254;
+  --pillar-bts-soft: #3a2611;
+  --pillar-proof: #3ec78f;
+  --pillar-proof-soft: #10301f;
+  --pillar-promo: #ff6b70;
+  --pillar-promo-soft: #3d1719;
+  --pillar-fun: #c47bf5;
+  --pillar-fun-soft: #2f1840;
+
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-md: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px -8px rgb(0 0 0 / 0.6);
+  --shadow-lg: 0 2px 4px rgb(0 0 0 / 0.3), 0 24px 48px -12px rgb(0 0 0 / 0.7);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-soft: var(--accent-soft);
+  --color-coral: var(--coral);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-success: var(--success);
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --font-display: var(--font-instrument-serif), ui-serif, Georgia, serif;
+
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+
+  --animate-fade-up: fade-up 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  --animate-shimmer: shimmer 1.6s linear infinite;
+  --animate-overlay-in: overlay-in 0.2s ease-out;
+  --animate-dialog-in: dialog-in 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+  --animate-sheet-in: sheet-in 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@keyframes shimmer {
+  from {
+    background-position: -400px 0;
+  }
+  to {
+    background-position: 400px 0;
+  }
+}
+
+@keyframes overlay-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -48%) scale(0.97);
+  }
+}
+
+@keyframes sheet-in {
+  from {
+    transform: translateX(-100%);
+  }
+}
+
+@layer base {
+  html {
+    color-scheme: light;
+  }
+  html.dark {
+    color-scheme: dark;
+  }
+  body {
+    background: var(--canvas);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-feature-settings: "ss01", "cv11";
+  }
+  ::selection {
+    background: var(--accent-soft);
+    color: var(--ink);
+  }
+  * {
+    border-color: var(--line);
+  }
+}
+
+@utility skeleton {
+  border-radius: 6px;
+  background: linear-gradient(
+    90deg,
+    var(--line) 0px,
+    var(--surface-2) 120px,
+    var(--line) 240px
+  );
+  background-size: 800px 100%;
+  animation: var(--animate-shimmer);
+}
+
+@utility scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+}
+
+@utility bg-grain {
+  background-image: radial-gradient(
+    rgb(23 21 28 / 0.035) 1px,
+    transparent 1px
+  );
+  background-size: 18px 18px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
