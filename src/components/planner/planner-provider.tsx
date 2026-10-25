@@ -24,6 +24,7 @@ export type PlannerAction =
   | { type: "post/edit"; position: number; field: "topic" | "videoIdea"; value: string }
   | { type: "plan/loaded"; id: string; input: PlanInput; posts: Slot[]; source: PlanSource }
   | { type: "plan/saved"; id: string }
+  | { type: "plan/detached" }
   | { type: "plan/reset" };
 
 export const initialPlannerState: PlannerState = {
@@ -77,6 +78,9 @@ export function plannerReducer(state: PlannerState, action: PlannerAction): Plan
       };
     case "plan/saved":
       return { ...state, savedPlanId: action.id, isDirty: false };
+    case "plan/detached":
+      // The open plan was deleted elsewhere; keep it on screen as unsaved work.
+      return { ...state, savedPlanId: null, isDirty: state.posts.length > 0 };
     case "plan/reset":
       return { ...initialPlannerState, revision: state.revision + 1 };
   }
