@@ -1,5 +1,6 @@
 import type { PlanInput, Platform, Slot } from "@/lib/validation";
 import { addDays, weekdayOf } from "./dates";
+import { assignPillars } from "./pillars";
 
 export const PLAN_DAYS = 30;
 
@@ -41,6 +42,7 @@ export function rotatePlatforms(offsets: number[], platforms: readonly Platform[
 export function buildSchedule(input: PlanInput): Slot[] {
   const offsets = postingOffsets(totalPosts(input.postsPerWeek));
   const platforms = rotatePlatforms(offsets, input.platforms);
+  const pillars = assignPillars(input.goal, offsets.length);
 
   return offsets.map((offset, position) => {
     const date = addDays(input.startDate, offset);
@@ -49,7 +51,7 @@ export function buildSchedule(input: PlanInput): Slot[] {
       date,
       weekday: weekdayOf(date),
       platform: platforms[position],
-      pillar: "educational",
+      pillar: pillars[position],
       format: "",
       postTime: "",
       topic: "",
