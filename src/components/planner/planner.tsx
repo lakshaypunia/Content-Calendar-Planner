@@ -10,6 +10,7 @@ import { PlanPanel } from "./plan-panel";
 import { PlanToolbar } from "./plan-toolbar";
 import { PlannerProvider, usePlanner } from "./planner-provider";
 import { SaveButton } from "./save-button";
+import { useDiscardGuard } from "./use-discard-guard";
 
 function Hero() {
   return (
@@ -31,12 +32,17 @@ function Hero() {
 
 function Workspace() {
   const { dispatch } = usePlanner();
+  const { confirmDiscard, dialog } = useDiscardGuard();
+  const newPlan = async () => {
+    if (await confirmDiscard()) dispatch({ type: "plan/reset" });
+  };
   return (
-    <AppShell sidebar={<ClientSidebar />} onNewPlan={() => dispatch({ type: "plan/reset" })}>
+    <AppShell sidebar={<ClientSidebar confirmDiscard={confirmDiscard} />} onNewPlan={newPlan}>
+      {dialog}
       <div className="mx-auto flex max-w-[1400px] flex-col gap-10 px-4 py-10 sm:px-8 lg:px-12 lg:py-14">
         <Hero />
         <div className="animate-fade-up [animation-delay:80ms]">
-          <PlanForm />
+          <PlanForm confirmDiscard={confirmDiscard} />
         </div>
         <PlanPanel
           toolbar={
