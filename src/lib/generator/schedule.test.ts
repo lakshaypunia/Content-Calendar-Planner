@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { PlanInput } from "@/lib/validation";
+import { isWeekend } from "./dates";
+import { BEST_TIMES, FORMATS } from "./rules";
 import { buildSchedule, postingOffsets, rotatePlatforms, totalPosts } from "./schedule";
 
 const base: PlanInput = {
@@ -74,5 +76,28 @@ describe("buildSchedule dates", () => {
 
   it("is deterministic", () => {
     expect(buildSchedule(base)).toEqual(buildSchedule(base));
+  });
+});
+
+describe("buildSchedule formats and times", () => {
+  const schedule = buildSchedule({ ...base, postsPerWeek: 14, goal: "awareness" });
+
+  it("uses a format from the platform + pillar table", () => {
+    for (const slot of schedule) expect(FORMATS[slot.platform][slot.pillar]).toContain(slot.format);
+  });
+
+  it("alternates formats when a platform + pillar pair repeats", () => {
+    const pair = schedule.filter((s) => s.platform === "instagram" && s.pillar === "educational");
+    expect(pair.length).toBeGreaterThan(1);
+    pair.forEach((slot, i) => expect(slot.format).toBe(FORMATS.instagram.educational[i % 2]));
+  });
+
+  it("picks weekday or weekend times and cycles through them", () => {
+    for (const slot of schedule) {
+      const list = isWeekend(slot.date) ? BEST_TIMES[slot.platform].weekend : BEST_TIMES[slot.platform].weekday;
+      expect(list).toContain(slot.postTime);
+    }
+    const igWeekday = schedule.filter((s) => s.platform === "instagram" && !isWeekend(s.date));
+    expect(igWeekday.slice(0, 4).map((s) => s.postTime)).toEqual(["12:30", "19:00", "12:30", "19:00"]);
   });
 });
