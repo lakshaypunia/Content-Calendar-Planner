@@ -31,6 +31,18 @@ export function validationError(error: z.ZodError): Response {
   return jsonError(400, "validation_error", "Some fields are invalid", fieldErrors(error));
 }
 
+/** Maps unexpected failures (e.g. database down or not configured) to a 500 without leaking details. */
+export function serverError(err: unknown, context: string): Response {
+  const message = err instanceof Error ? err.message : "unknown";
+  console.error(`[${context}]`, message);
+  const notConfigured = message.includes("DATABASE_URL");
+  return jsonError(
+    500,
+    "internal_error",
+    notConfigured ? "Database is not configured" : "Something went wrong, please try again",
+  );
+}
+
 /** Parses the JSON body, or returns a 400 response. */
 export async function readJson(request: Request): Promise<{ ok: true; data: unknown } | { ok: false; response: Response }> {
   try {

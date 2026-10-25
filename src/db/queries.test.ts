@@ -11,8 +11,11 @@ describe("planTitle", () => {
 });
 
 describe("planSource", () => {
-  it("keeps the generation source until a post is edited", () => {
-    expect(planSource([slot, slot], "ai")).toBe("ai");
-    expect(planSource([slot, { ...slot, source: "edited" }], "mixed")).toBe("edited");
+  it("derives the plan source from its posts", () => {
+    const ai = { ...slot, source: "ai" } as Slot;
+    expect(planSource([slot, slot])).toBe("template");
+    expect(planSource([ai, ai])).toBe("ai");
+    expect(planSource([ai, slot])).toBe("mixed");
+    expect(planSource([ai, { ...slot, source: "edited" }])).toBe("edited");
   });
 });

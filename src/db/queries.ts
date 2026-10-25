@@ -28,9 +28,12 @@ function postRows(planId: string, slots: Slot[]) {
   }));
 }
 
-/** Plan-level source: the generation source, or "edited" once any post was edited. */
-export function planSource(slots: Slot[], generated: PlanSource): PlanSource {
-  return slots.some((s) => s.source === "edited") ? "edited" : generated;
+/** Plan-level source from its posts: edited > mixed (ai + template) > ai | template. */
+export function planSource(slots: Slot[]): PlanSource {
+  const sources = new Set(slots.map((s) => s.source));
+  if (sources.has("edited")) return "edited";
+  if (sources.has("ai") && sources.has("template")) return "mixed";
+  return sources.has("ai") ? "ai" : "template";
 }
 
 /**
@@ -38,12 +41,7 @@ export function planSource(slots: Slot[], generated: PlanSource): PlanSource {
  * runs a batch as a single transaction). The plan id is generated here so
  * both inserts fit in that batch.
  */
-export async function savePlan(
-  input: PlanInput,
-  slots: Slot[],
-  source: PlanSource,
-  db: Db = getDb(),
-): Promise<{ id: string }> {
+export async function savePlan(input: PlanInput, slots: Slot[], db: Db = getDb()): Promise<{ id: string }> {
   const [client] = await db
     .insert(clients)
     .values({ name: input.brand, niche: input.niche, audience: input.audience })
@@ -61,7 +59,7 @@ export async function savePlan(
       startDate: input.startDate,
       platforms: input.platforms,
       useAi: input.useAi,
-      source: planSource(slots, source),
+      source: planSource(slots),
     }),
     db.insert(posts).values(postRows(id, slots)),
   ]);
@@ -74,7 +72,7 @@ export async function updatePlanPosts(
   slots: Slot[],
   db: Db = getDb(),
 ): Promise<{ updatedAt: Date } | null> {
-  const existing = await db.query.plans.findFirst({ where: eq(plans.id, planId), columns: { source: true } });
+  const existing = await db.query.plans.findFirst({ where: eq(plans.id, planId), columns: { id: true } });
   if (!existing) return null;
 
   const updatedAt = new Date();
@@ -83,7 +81,7 @@ export async function updatePlanPosts(
     db.insert(posts).values(postRows(planId, slots)),
     db
       .update(plans)
-      .set({ updatedAt, source: planSource(slots, existing.source) })
+      .set({ updatedAt, source: planSource(slots) })
       .where(eq(plans.id, planId)),
   ]);
   return { updatedAt };
