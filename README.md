@@ -1,36 +1,49 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Cadence — Content Calendar Planner
 
-## Getting Started
+Plan 30 days of social content for an agency client in seconds. Fill in a brief (brand, niche, audience,
+goal, posts per week, start date, platforms), choose whether AI writes the copy, and get an editable posting
+plan you can save, reload, export to CSV or paste straight into Google Sheets.
 
-First, run the development server:
+- **Use AI off** — a deterministic rule-based generator builds the schedule and built-in templates write each
+  topic and video idea. No external calls.
+- **Use AI on** — same schedule, Gemini writes a unique topic and video idea per slot. If Gemini is not
+  configured, times out or returns bad output, templates fill in and the UI tells you.
+
+## Stack
+
+Next.js (App Router) · TypeScript · Tailwind CSS with a custom design system on Radix primitives ·
+react-hook-form + Zod · TanStack Query · Neon Postgres + Drizzle ORM · Google Gen AI SDK · Vitest · Playwright
+
+## Getting started
+
+Requires Node 20+ and pnpm.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+pnpm install
+cp .env.example .env.local   # then fill in the values below
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Environment
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Variable             | Required | Default                 | Notes                                                  |
+| -------------------- | -------- | ----------------------- | ------------------------------------------------------ |
+| `DATABASE_URL`       | Yes      | —                       | Pooled connection string from the Neon console         |
+| `GEMINI_API_KEY`     | No       | empty                   | Empty = AI switch disabled, templates only             |
+| `GEMINI_MODEL`       | No       | `gemini-3.5-flash-lite` | Keep in env; Google retires model ids often            |
+| `AI_TIMEOUT_MS`      | No       | `20000`                 | Gemini call timeout                                    |
+| `RATE_LIMIT_PER_MIN` | No       | `10`                    | Requests per IP per minute on generate when AI is on   |
 
-## Learn More
+Never commit `.env` or `.env.local`.
 
-To learn more about Next.js, take a look at the following resources:
+## Scripts
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| Script           | Does                                  |
+| ---------------- | ------------------------------------- |
+| `pnpm dev`       | Start the dev server                  |
+| `pnpm build`     | Production build                      |
+| `pnpm lint`      | ESLint                                |
+| `pnpm typecheck` | Generate route types and run `tsc`    |
+| `pnpm test`      | Unit and route tests (Vitest)         |
