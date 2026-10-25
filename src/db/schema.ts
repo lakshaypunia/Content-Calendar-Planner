@@ -1,4 +1,5 @@
 import { boolean, date, index, integer, jsonb, pgEnum, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 import type { Platform } from "@/lib/validation";
 
 export const goalEnum = pgEnum("goal", ["awareness", "leads", "engagement", "sales"]);
@@ -51,3 +52,14 @@ export const posts = pgTable(
   },
   (t) => [index("posts_plan_position_idx").on(t.planId, t.position)],
 );
+
+export const clientsRelations = relations(clients, ({ many }) => ({ plans: many(plans) }));
+
+export const plansRelations = relations(plans, ({ one, many }) => ({
+  client: one(clients, { fields: [plans.clientId], references: [clients.id] }),
+  posts: many(posts),
+}));
+
+export const postsRelations = relations(posts, ({ one }) => ({
+  plan: one(plans, { fields: [posts.planId], references: [plans.id] }),
+}));
