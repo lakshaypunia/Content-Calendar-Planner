@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Lint, typecheck and test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+
+  e2e:
+    name: Playwright (template mode)
+    runs-on: ubuntu-latest
+    needs: check
+    env:
+      # Pooled URL of a Neon *test* branch. Without it the job is skipped.
+      E2E_DATABASE_URL: ${{ secrets.E2E_DATABASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+        if: env.E2E_DATABASE_URL != ''
+      - uses: pnpm/action-setup@v4
+        if: env.E2E_DATABASE_URL != ''
+      - uses: actions/setup-node@v4
+        if: env.E2E_DATABASE_URL != ''
+        with:
+          node-version: 22
+          cache: pnpm
+      - if: env.E2E_DATABASE_URL != ''
+        run: pnpm install --frozen-lockfile
+      - if: env.E2E_DATABASE_URL != ''
+        run: pnpm exec playwright install --with-deps chromium
+      # next dev reads settings only from .env files (see src/lib/env.ts).
+      - if: env.E2E_DATABASE_URL != ''
+        run: echo "DATABASE_URL=$E2E_DATABASE_URL" > .env.local
+      - if: env.E2E_DATABASE_URL != ''
+        run: pnpm db:migrate
+      - if: env.E2E_DATABASE_URL != ''
+        run: pnpm test:e2e
+      - if: env.E2E_DATABASE_URL == ''
+        run: echo "::notice::E2E_DATABASE_URL secret not set, skipping Playwright."
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-traces
+          path: test-results/
