@@ -146,9 +146,10 @@ export function PlanForm({ confirmDiscard }: { confirmDiscard?: () => Promise<bo
     if (!getValues("startDate")) setValue("startDate", localToday());
   }, [getValues, setValue]);
 
-  // When a saved plan is loaded, show its brief in the form.
+  // When a saved plan is loaded, show its brief in the form; on "New plan", clear it.
   useEffect(() => {
     if (state.input) reset(state.input);
+    else if (state.revision > 0) reset({ ...DEFAULTS, startDate: localToday() }); // "New plan"
   }, [state.revision, state.input, reset]);
 
   const perWeek = Number(useWatch({ control, name: "postsPerWeek" })) || 0;

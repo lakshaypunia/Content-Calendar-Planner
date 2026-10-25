@@ -1,23 +1,16 @@
 "use client";
 
+import { useState } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AppShell } from "@/components/app-shell";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { ClientSidebar } from "./client-sidebar";
 import { PlanForm } from "./plan-form";
 import { PlanPanel } from "./plan-panel";
 import { PlanToolbar } from "./plan-toolbar";
 import { PlannerProvider, usePlanner } from "./planner-provider";
-
-function SavedPlansPlaceholder() {
-  return (
-    <div className="px-2">
-      <p className="px-1 text-[10px] font-semibold tracking-[0.16em] text-white/35 uppercase">Saved plans</p>
-      <div className="mt-3 rounded-2xl border border-dashed border-white/10 px-4 py-6 text-center">
-        <p className="text-[13px] text-white/60">No saved plans yet</p>
-        <p className="mt-1 text-[12px] text-white/35">Plans you save appear here, grouped by client.</p>
-      </div>
-    </div>
-  );
-}
+import { SaveButton } from "./save-button";
+import { useDiscardGuard } from "./use-discard-guard";
 
 function Hero() {
   return (
@@ -39,25 +32,41 @@ function Hero() {
 
 function Workspace() {
   const { dispatch } = usePlanner();
+  const { confirmDiscard, dialog } = useDiscardGuard();
+  const newPlan = async () => {
+    if (await confirmDiscard()) dispatch({ type: "plan/reset" });
+  };
   return (
-    <AppShell sidebar={<SavedPlansPlaceholder />} onNewPlan={() => dispatch({ type: "plan/reset" })}>
+    <AppShell sidebar={<ClientSidebar confirmDiscard={confirmDiscard} />} onNewPlan={newPlan}>
+      {dialog}
       <div className="mx-auto flex max-w-[1400px] flex-col gap-10 px-4 py-10 sm:px-8 lg:px-12 lg:py-14">
         <Hero />
         <div className="animate-fade-up [animation-delay:80ms]">
-          <PlanForm />
+          <PlanForm confirmDiscard={confirmDiscard} />
         </div>
-        <PlanPanel toolbar={<PlanToolbar />} />
+        <PlanPanel
+          toolbar={
+            <PlanToolbar>
+              <SaveButton />
+            </PlanToolbar>
+          }
+        />
       </div>
     </AppShell>
   );
 }
 
 export function Planner() {
+  const [queryClient] = useState(
+    () => new QueryClient({ defaultOptions: { queries: { staleTime: 30_000, refetchOnWindowFocus: false } } }),
+  );
   return (
-    <PlannerProvider>
-      <TooltipProvider>
-        <Workspace />
-      </TooltipProvider>
-    </PlannerProvider>
+    <QueryClientProvider client={queryClient}>
+      <PlannerProvider>
+        <TooltipProvider>
+          <Workspace />
+        </TooltipProvider>
+      </PlannerProvider>
+    </QueryClientProvider>
   );
 }

@@ -66,14 +66,14 @@ export function buildUserPrompt(input: PlanInput, slots: Slot[]): string {
 export class AiError extends Error {}
 
 /**
- * One Gemini request per plan. Throws AiError on timeout, API error, safety
+ * One Gemini request per plan (Gemini API key or Vertex AI service account). Throws AiError on timeout, API error, safety
  * block or output that fails the schema; never logs the key or the prompt.
  */
 export async function requestGemini(slots: Slot[], input: PlanInput): Promise<AiItem[]> {
-  const { apiKey, model, timeoutMs } = aiConfig();
-  if (!apiKey) throw new AiError("AI is not configured");
+  const { clientOptions, model, timeoutMs } = aiConfig();
+  if (!clientOptions) throw new AiError("AI is not configured");
 
-  const ai = new GoogleGenAI({ apiKey });
+  const ai = new GoogleGenAI(clientOptions);
   const signal = AbortSignal.timeout(timeoutMs);
   const timeout = new Promise<never>((_, reject) => {
     signal.addEventListener("abort", () => reject(new AiError(`Gemini timed out after ${timeoutMs}ms`)), {

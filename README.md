@@ -38,6 +38,10 @@ Open http://localhost:3000.
 
 Never commit `.env` or `.env.local`.
 
+In `pnpm dev` these values are read **only** from the project's `.env.local` / `.env` files; variables set in
+your OS or shell are ignored, so a stray `GEMINI_API_KEY` or `DATABASE_URL` on your machine never leaks into
+local runs. In production (Vercel) they come from the project's environment variables as usual.
+
 ## Scripts
 
 | Script           | Does                                  |
