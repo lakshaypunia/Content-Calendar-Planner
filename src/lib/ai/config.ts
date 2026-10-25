@@ -20,13 +20,17 @@ export interface AiConfig {
 
 /**
  * Service account JSON, from GOOGLE_CREDENTIALS_JSON (the file contents; use
- * this on Vercel) or GOOGLE_APPLICATION_CREDENTIALS (a path; handy locally).
+ * this on Vercel) or, outside production builds only, GOOGLE_APPLICATION_CREDENTIALS
+ * (a file path). The file read is compiled out of production so Vercel's file
+ * tracer does not pull the whole project (or a local secrets.json) into the bundle.
  */
 function serviceAccount(): ServiceAccount | null {
   let raw = serverEnv("GOOGLE_CREDENTIALS_JSON")?.trim();
-  const path = serverEnv("GOOGLE_APPLICATION_CREDENTIALS")?.trim();
   try {
-    if (!raw && path) raw = readFileSync(isAbsolute(path) ? path : join(process.cwd(), path), "utf8");
+    if (!raw && process.env.NODE_ENV !== "production") {
+      const path = serverEnv("GOOGLE_APPLICATION_CREDENTIALS")?.trim();
+      if (path) raw = readFileSync(isAbsolute(path) ? path : join(process.cwd(), path), "utf8");
+    }
     if (!raw) return null;
     const json = JSON.parse(raw) as Partial<ServiceAccount>;
     if (!json.project_id || !json.client_email || !json.private_key) throw new Error("missing fields");
