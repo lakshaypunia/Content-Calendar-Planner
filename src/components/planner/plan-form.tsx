@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -30,6 +30,17 @@ function localToday(): string {
   return new Date(d.getTime() - d.getTimezoneOffset() * 60_000).toISOString().slice(0, 10);
 }
 
+const DEFAULTS: PlanInputForm = {
+  brand: "",
+  niche: "",
+  audience: "",
+  goal: "engagement",
+  postsPerWeek: 3,
+  startDate: "",
+  platforms: ["instagram", "linkedin"],
+  useAi: false,
+};
+
 function SectionLabel({ step, children }: { step: string; children: React.ReactNode }) {
   return (
     <div className="mb-4 flex items-center gap-3">
@@ -44,16 +55,6 @@ function SectionLabel({ step, children }: { step: string; children: React.ReactN
 
 export function PlanForm({ confirmDiscard }: { confirmDiscard?: () => Promise<boolean> }) {
   const { state, dispatch } = usePlanner();
-  const [defaults] = useState<PlanInputForm>(() => ({
-    brand: "",
-    niche: "",
-    audience: "",
-    goal: "engagement",
-    postsPerWeek: 3,
-    startDate: localToday(),
-    platforms: ["instagram", "linkedin"],
-    useAi: false,
-  }));
 
   const {
     register,
@@ -61,12 +62,19 @@ export function PlanForm({ confirmDiscard }: { confirmDiscard?: () => Promise<bo
     handleSubmit,
     reset,
     setError,
+    setValue,
+    getValues,
     formState: { errors },
   } = useForm<PlanInputForm, unknown, PlanInput>({
     resolver: zodResolver(PlanInput),
-    defaultValues: defaults,
+    defaultValues: DEFAULTS,
     mode: "onTouched",
   });
+
+  // Today depends on the visitor's clock, so fill it in after mount rather than during prerender.
+  useEffect(() => {
+    if (!getValues("startDate")) setValue("startDate", localToday());
+  }, [getValues, setValue]);
 
   // When a saved plan is loaded, show its brief in the form.
   useEffect(() => {
@@ -289,7 +297,7 @@ export function PlanForm({ confirmDiscard }: { confirmDiscard?: () => Promise<bo
                           "grid size-7 place-items-center rounded-full transition-colors",
                           selected ? "bg-white" : "bg-canvas",
                         )}
-                        style={{ color: platform === "x" ? "#17151c" : PLATFORM_COLORS[platform] }}
+                        style={{ color: platform === "x" ? (selected ? "#17151c" : "var(--ink)") : PLATFORM_COLORS[platform] }}
                       >
                         <PlatformIcon platform={platform} className="size-3.5" />
                       </span>

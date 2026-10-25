@@ -3,6 +3,7 @@
 import { AppShell } from "@/components/app-shell";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { PlanForm } from "./plan-form";
+import { PlanPanel } from "./plan-panel";
 import { PlannerProvider, usePlanner } from "./planner-provider";
 
 function SavedPlansPlaceholder() {
@@ -44,6 +45,7 @@ function Workspace() {
         <div className="animate-fade-up [animation-delay:80ms]">
           <PlanForm />
         </div>
+        <PlanPanel />
       </div>
     </AppShell>
   );
