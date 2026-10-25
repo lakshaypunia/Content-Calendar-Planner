@@ -3,11 +3,13 @@
  * NOTE: per server instance only. On Vercel each lambda instance keeps its
  * own counts, so this is a cost guard, not a hard global limit.
  */
+import { serverEnv } from "@/lib/env";
+
 const WINDOW_MS = 60_000;
 const buckets = new Map<string, { count: number; resetAt: number }>();
 
 export function limitPerMinute(): number {
-  return Number(process.env.RATE_LIMIT_PER_MIN) || 10;
+  return Number(serverEnv("RATE_LIMIT_PER_MIN")) || 10;
 }
 
 export function checkRateLimit(

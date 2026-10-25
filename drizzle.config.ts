@@ -1,7 +1,8 @@
 import { config } from "dotenv";
 import { defineConfig } from "drizzle-kit";
 
-config({ path: [".env.local", ".env"], quiet: true });
+// override: project files beat any DATABASE_URL left in the OS environment.
+config({ path: [".env.local", ".env"], quiet: true, override: true });
 
 export default defineConfig({
   dialect: "postgresql",
