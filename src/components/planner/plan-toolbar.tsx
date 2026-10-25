@@ -8,6 +8,7 @@ import { Tooltip } from "@/components/ui/tooltip";
 import { downloadCsv } from "@/lib/export/csv";
 import { copyForSheets } from "@/lib/export/tsv";
 import { usePlanner } from "./planner-provider";
+import { SourceBadge } from "./source-badge";
 
 export function PlanToolbar({ children }: { children?: ReactNode }) {
   const { state } = usePlanner();
@@ -28,6 +29,7 @@ export function PlanToolbar({ children }: { children?: ReactNode }) {
 
   return (
     <>
+      {state.source && <SourceBadge source={state.source} />}
       {children}
       <Tooltip content="Excel and Google Sheets friendly">
         <Button variant="secondary" size="sm" onClick={() => downloadCsv(posts, input.brand, input.startDate)}>

@@ -51,10 +51,10 @@ function Summary({ posts }: { posts: Slot[] }) {
   const days = new Set(posts.map((p) => p.date)).size;
 
   return (
-    <div className="grid gap-px overflow-hidden border-y border-line bg-line sm:grid-cols-[auto_auto_1fr]">
+    <div className="grid grid-cols-2 gap-px overflow-hidden border-y border-line bg-line sm:grid-cols-[auto_auto_1fr]">
       <Stat label="Posts" value={total} />
       <Stat label="Active days" value={`${days}/${PLAN_DAYS}`} />
-      <div className="bg-surface px-5 py-4">
+      <div className="col-span-2 bg-surface px-5 py-4 sm:col-span-1">
         <div className="flex items-center justify-between">
           <span className="text-[11px] font-semibold tracking-[0.08em] text-ink-3 uppercase">Pillar mix</span>
           <div className="flex flex-wrap justify-end gap-1.5">

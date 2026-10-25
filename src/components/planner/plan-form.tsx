@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect } from "react";
-import { Controller, useForm, useWatch } from "react-hook-form";
+import { Controller, useForm, useWatch, type Control } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { ArrowRight, Check, Loader2, Minus, Plus, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Textarea } from "@/components/ui/field";
+import { Switch } from "@/components/ui/switch";
+import { Tooltip } from "@/components/ui/tooltip";
 import { GOAL_WEIGHTS } from "@/lib/generator/rules";
 import { totalPosts } from "@/lib/generator/schedule";
 import { GOAL_LABELS, PLATFORM_LABELS } from "@/lib/labels";
@@ -17,6 +19,7 @@ import { cn } from "@/lib/utils";
 import { pillarColor } from "./pillar-badge";
 import { PLATFORM_COLORS, PlatformIcon } from "./platform-icon";
 import { usePlanner } from "./planner-provider";
+import { useAiAvailable } from "./use-config";
 
 const GOAL_COPY: Record<Goal, string> = {
   awareness: "Reach new people",
@@ -53,6 +56,73 @@ function SectionLabel({ step, children }: { step: string; children: React.ReactN
   );
 }
 
+function AiToggle({
+  control,
+  available,
+  active,
+}: {
+  control: Control<PlanInputForm, unknown, PlanInput>;
+  available: boolean | null;
+  active: boolean;
+}) {
+  const disabled = available !== true;
+  const toggle = (
+    <Controller
+      control={control}
+      name="useAi"
+      render={({ field }) => (
+        <Switch
+          id="useAi"
+          checked={!!field.value}
+          onCheckedChange={field.onChange}
+          disabled={disabled}
+          aria-describedby="useAi-hint"
+        />
+      )}
+    />
+  );
+  return (
+    <div className="flex items-center gap-3.5">
+      <span
+        className={cn(
+          "grid size-10 shrink-0 place-items-center rounded-xl transition-all duration-300",
+          active
+            ? "bg-gradient-to-br from-[#7c63ff] to-[#a845e8] text-white shadow-[0_8px_20px_-8px_#7c63ff]"
+            : "bg-canvas text-ink-3",
+        )}
+      >
+        <Sparkles className="size-4.5" />
+      </span>
+      <div className="min-w-0">
+        <label htmlFor="useAi" className="flex items-center gap-2 text-sm font-semibold text-ink">
+          Use AI
+          {available === false && (
+            <span className="rounded-full bg-canvas px-2 py-0.5 text-[11px] font-medium text-ink-3">
+              AI not configured
+            </span>
+          )}
+        </label>
+        <p id="useAi-hint" className="text-[12.5px] text-ink-3">
+          {active
+            ? "Gemini writes a unique topic and video idea for every slot."
+            : "Off: built-in templates write the copy. Schedule is the same either way."}
+        </p>
+      </div>
+      <div className="ml-auto pl-2 sm:ml-4">
+        {available === false ? (
+          <Tooltip content="AI not configured: set GEMINI_API_KEY on the server">
+            <span tabIndex={0} className="inline-flex rounded-full">
+              {toggle}
+            </span>
+          </Tooltip>
+        ) : (
+          toggle
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function PlanForm({ confirmDiscard }: { confirmDiscard?: () => Promise<boolean> }) {
   const { state, dispatch } = usePlanner();
 
@@ -82,7 +152,14 @@ export function PlanForm({ confirmDiscard }: { confirmDiscard?: () => Promise<bo
   }, [state.revision, state.input, reset]);
 
   const perWeek = Number(useWatch({ control, name: "postsPerWeek" })) || 0;
+  const useAi = useWatch({ control, name: "useAi" }) ?? false;
+  const aiAvailable = useAiAvailable();
   const generating = state.status === "generating";
+
+  // If the server has no key, never send useAi: true.
+  useEffect(() => {
+    if (aiAvailable === false && getValues("useAi")) setValue("useAi", false);
+  }, [aiAvailable, getValues, setValue]);
 
   const onSubmit = handleSubmit(async (input) => {
     if (confirmDiscard && !(await confirmDiscard())) return;
@@ -318,13 +395,11 @@ export function PlanForm({ confirmDiscard }: { confirmDiscard?: () => Promise<bo
       </div>
 
       <div className="flex flex-col gap-4 border-t border-line bg-surface-2 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-8">
-        <p className="text-[13px] text-ink-3">
-          Schedule, pillars, formats and times are planned by rules, so the same brief always gives the same calendar.
-        </p>
+        <AiToggle control={control} available={aiAvailable} active={useAi} />
         <Button type="submit" size="lg" disabled={generating} className="group sm:min-w-52">
           {generating ? (
             <>
-              <Loader2 className="animate-spin" /> Building plan…
+              <Loader2 className="animate-spin" /> {useAi ? "Writing with AI…" : "Building plan…"}
             </>
           ) : (
             <>
